@@ -1,20 +1,17 @@
 package ColdPocket.Bots;
 
 import ColdPocket.Bots.Base.Droid;
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.RobotType;
-
+import battlecode.common.*;
 
 
 public class Archon extends Droid {
 
-    static int MinersAlive = 0;
-    static int SoldiersAlive = 0;
-    static int LaboratorysAlive = 0;
-    static int WatchTowersAlive = 0;
-    static int BuildersAlive = 0;
-    static int SagesAlive = 0;
+    public static int MinersAlive = 0;
+    public static int SoldiersAlive = 0;
+    public static int LaboratorysAlive = 0;
+    public static int WatchTowersAlive = 0;
+    public static int BuildersAlive = 0;
+    public static int SagesAlive = 0;
 
 
     public static void TakeTurn() throws GameActionException {
@@ -23,9 +20,6 @@ public class Archon extends Droid {
             if (rc.canBuildRobot(RobotType.MINER, dir)) {
                 Spawn("miner");
                 MinersAlive++;
-            }
-            else{
-                rc.setIndicatorString("Can't Afford anything, Waiting");
             }
         }
         else {
@@ -74,6 +68,7 @@ public class Archon extends Droid {
             rc.setIndicatorString("Trying to build a " + type);
         }
     }
+
 
 
 
