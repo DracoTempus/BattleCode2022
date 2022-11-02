@@ -11,6 +11,7 @@ public class Miner extends Droid {
         moveToLocation(lookForMinerals());
         tryMineAround();
         checkForEnemy();
+        trySuicide();
         if(lookForMinerals() == null){
             rc.setIndicatorString("Can't find anything, moving randomly");
         }

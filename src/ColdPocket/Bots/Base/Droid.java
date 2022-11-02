@@ -4,6 +4,13 @@ import battlecode.common.*;
 
 import java.util.Random;
 
+import static ColdPocket.Bots.Archon.MinersAlive;
+import static ColdPocket.Bots.Archon.SoldiersAlive;
+import static ColdPocket.Bots.Archon.LaboratorysAlive;
+import static ColdPocket.Bots.Archon.WatchTowersAlive;
+import static ColdPocket.Bots.Archon.BuildersAlive;
+import static ColdPocket.Bots.Archon.SagesAlive;
+
 public abstract class Droid {
     public static RobotController rc;
     public static final Direction[] directions = {
@@ -46,48 +53,44 @@ public abstract class Droid {
         int radius = rc.getType().actionRadiusSquared;
         Team opponent = rc.getTeam().opponent();
         RobotInfo[] enemies = rc.senseNearbyRobots(radius, opponent);
-        MapLocation enemy = rc.getLocation();
-        for (RobotInfo Tower:enemies){
-            if (Tower.getType() == RobotType.ARCHON && Tower.team == opponent){
+        for (RobotInfo Tower : enemies) {
+            if (Tower.getType() == RobotType.ARCHON && Tower.team == opponent) {
                 rc.writeSharedArray(1, Tower.getLocation().x);
                 rc.writeSharedArray(2, Tower.getLocation().y);
                 rc.writeSharedArray(13, Tower.getID());
-                System.out.println("Archon Found | 1 & 2| " + Tower.getLocation().x + ","+ Tower.getLocation().y);
+                System.out.println("Archon Found | 1 & 2| " + Tower.getLocation().x + "," + Tower.getLocation().y);
             }
-            if (Tower.getType() == RobotType.SOLDIER && Tower.team == opponent){
+            if (Tower.getType() == RobotType.SOLDIER && Tower.team == opponent) {
                 rc.writeSharedArray(3, Tower.getLocation().x);
                 rc.writeSharedArray(4, Tower.getLocation().y);
                 rc.writeSharedArray(14, Tower.getID());
-                System.out.println("Soldier Found | 3 & 4  | " + Tower.getLocation().x + ","+ Tower.getLocation().y);
+                System.out.println("Soldier Found | 3 & 4  | " + Tower.getLocation().x + "," + Tower.getLocation().y);
             }
-            if (Tower.getType() == RobotType.MINER && Tower.team == opponent){
+            if (Tower.getType() == RobotType.MINER && Tower.team == opponent) {
                 rc.writeSharedArray(5, Tower.getLocation().x);
                 rc.writeSharedArray(6, Tower.getLocation().y);
                 rc.writeSharedArray(15, Tower.getID());
-                System.out.println("Miner Found | 5 & 6 | " + Tower.getLocation().x + ","+ Tower.getLocation().y);
+                System.out.println("Miner Found | 5 & 6 | " + Tower.getLocation().x + "," + Tower.getLocation().y);
             }
-            if (Tower.getType() == RobotType.SAGE && Tower.team == opponent){
+            if (Tower.getType() == RobotType.SAGE && Tower.team == opponent) {
                 rc.writeSharedArray(7, Tower.getLocation().x);
                 rc.writeSharedArray(8, Tower.getLocation().y);
                 rc.writeSharedArray(16, Tower.getID());
-                System.out.println("Sage Found | 7 & 8 | " + Tower.getLocation().x + ","+ Tower.getLocation().y);
+                System.out.println("Sage Found | 7 & 8 | " + Tower.getLocation().x + "," + Tower.getLocation().y);
             }
-            if (Tower.getType() == RobotType.WATCHTOWER && Tower.team == opponent){
+            if (Tower.getType() == RobotType.WATCHTOWER && Tower.team == opponent) {
                 rc.writeSharedArray(9, Tower.getLocation().x);
                 rc.writeSharedArray(10, Tower.getLocation().y);
                 rc.writeSharedArray(17, Tower.getID());
-                System.out.println("Watch Tower Found | 9 & 10 | " + Tower.getLocation().x + ","+ Tower.getLocation().y);
+                System.out.println("Watch Tower Found | 9 & 10 | " + Tower.getLocation().x + "," + Tower.getLocation().y);
             }
-            if (Tower.getType() == RobotType.LABORATORY && Tower.team == opponent){
+            if (Tower.getType() == RobotType.LABORATORY && Tower.team == opponent) {
                 rc.writeSharedArray(11, Tower.getLocation().x);
                 rc.writeSharedArray(12, Tower.getLocation().y);
                 rc.writeSharedArray(18, Tower.getID());
-                System.out.println("Laboratory Found | 11 & 12 | " + Tower.getLocation().x + ","+ Tower.getLocation().y);
+                System.out.println("Laboratory Found | 11 & 12 | " + Tower.getLocation().x + "," + Tower.getLocation().y);
             }
-
         }
-
-
     }
 
     public static void attackAnything() throws GameActionException {
@@ -131,7 +134,7 @@ public abstract class Droid {
         }
         if(ClosestMappoint != null){
             if (rc.getType() == RobotType.MINER){
-                rc.setIndicatorString("Found Closest Mappoint " + ClosestMappoint);
+                rc.setIndicatorString("Found Closest Mappoint " + ClosestMappoint + "| Health: " + rc.getHealth());
                 rc.setIndicatorDot(ClosestMappoint, 255,0,255);
             }
         }
@@ -155,6 +158,42 @@ public abstract class Droid {
         for (int index = 0; index < 64; index++) {
             rc.writeSharedArray(index, 65535);
         }
+    }
+
+    public static void trySuicide(){
+        if(rc.getHealth() < NearEnemyDamage()){
+            rc.setIndicatorString("I died because my health was < " + NearEnemyDamage() +" | Health: " + rc.getHealth());
+            System.out.println("I died because my health was < " + NearEnemyDamage() +" | Health: " + rc.getHealth());
+            if(rc.getType() == RobotType.MINER){
+                MinersAlive--;
+            }
+            else if(rc.getType() == RobotType.SOLDIER){
+                SoldiersAlive--;
+            }
+            else if(rc.getType() == RobotType.LABORATORY){
+                LaboratorysAlive--;
+            }
+            else if(rc.getType() == RobotType.WATCHTOWER){
+                WatchTowersAlive--;
+            }
+            else if(rc.getType() == RobotType.BUILDER){
+                BuildersAlive--;
+            }
+            else if(rc.getType() == RobotType.SAGE){
+                SagesAlive--;
+            }
+            rc.disintegrate();
+        }
+    }
+
+    public static int NearEnemyDamage(){
+        RobotInfo[] robotsAround = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+        for (RobotInfo Robot:robotsAround) {
+            if(rc.getHealth() < Robot.type.getDamage(Robot.level) + 3){
+                return Robot.type.getDamage(Robot.level) + 3;
+            }
+        }
+        return 0;
     }
 
 
