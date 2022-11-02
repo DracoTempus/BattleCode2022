@@ -23,7 +23,7 @@ data/*
 *.ipr
 *.iws
 /.idea/
-
+*.exe
 
 # User-specific stuff:
 battlecode-scaffold.iws
