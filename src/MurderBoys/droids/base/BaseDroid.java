@@ -15,6 +15,15 @@ public class BaseDroid {
     public static MapLocation FirstEnemyLocation = noLocation;
     public static MapLocation MyArchon = noLocation;
 
+    public static RobotType[] DangerousTypes = {
+           RobotType.SOLDIER,
+           RobotType.SAGE,
+           RobotType.WATCHTOWER
+    };
+
+    //BUILDER SPECIFIC//
+    public static boolean SUPERSMARTYPANTS = false;
+    public static Direction SACDirection = null;
 
     //BUILDER SPECIFIC//
     public static boolean WATCHTOWERBUILT = false;
@@ -24,8 +33,10 @@ public class BaseDroid {
     ///ARCHON SPECIFIC//
     public static int BUILDLOCATION = 0;
     public static int MAX_MINERS = 10;
+    public static int MAX_SOLDIERS = 10;
     public static int SoldiersBuilt = 0;
     public static int BuildersBuilt = 0;
+    public static int SacrificesBuilt = 0;
 
     public enum INDEX{
         ENEMY_ARCHON_BOTID  (1),
@@ -40,6 +51,12 @@ public class BaseDroid {
         ENEMY_2_BOTID       (10),
         ENEMY_2_X           (11),
         ENEMY_2_Y           (12),
+        SACRIFICE_ID_1      (57),
+        SACRIFICE_ID_2      (58),
+        SACRIFICE_ID_3      (59),
+        SACRIFICE_ID_4      (60),
+        SACRIFICE_ID_5      (61),
+        SACRIFICE_ID_6      (62),
         AMOUNT_OF_MINERS    (63);
 
         INDEX(int index){
@@ -88,6 +105,24 @@ public class BaseDroid {
 
     public static void GoTowardsLocation(RobotController rc, MapLocation Target){
 
+    }
+
+    public static MapLocation BringInLight(){
+        int MapSizeX = rc.getMapWidth();
+        int MapSizeY = rc.getMapHeight();
+        int MyArchonX = MyArchon.x;
+        int MyArchonY = MyArchon.y;
+
+        int bestX = 0;
+        int bestY = 0;
+
+        if(MyArchonX < MapSizeX/3){
+            bestX = MapSizeX;
+        }
+        if(MyArchonY < MapSizeY/3){
+            bestY = MapSizeY;
+        }
+        return new MapLocation(bestX,bestY);
     }
 
     public static void RunToFightAnotherDay() throws GameActionException {

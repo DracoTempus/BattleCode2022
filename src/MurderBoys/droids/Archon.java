@@ -3,7 +3,7 @@ package MurderBoys.droids;
 import MurderBoys.droids.base.BaseDroid;
 import battlecode.common.*;
 
-import static MurderBoys.droids.base.BaseDroid.INDEX.AMOUNT_OF_MINERS;
+import static MurderBoys.droids.base.BaseDroid.INDEX.*;
 import static battlecode.common.RobotType.MINER;
 
 
@@ -13,6 +13,10 @@ public class Archon extends BaseDroid {
 
         RobotInfo[] friendlyRobots = rc.senseNearbyRobots(rc.getType().actionRadiusSquared, rc.getTeam());
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(rc.getType().visionRadiusSquared, rc.getTeam().opponent());
+
+        if(rc.readSharedArray(ENEMY_ARCHON_BOTID.getIndex()) != 0){
+            MAX_SOLDIERS = 50;
+        }
 
         for (RobotInfo friendly:friendlyRobots) {
             if(friendly.health < friendly.type.health){
@@ -31,12 +35,31 @@ public class Archon extends BaseDroid {
                 rc.buildRobot(MINER, dir);
             }
         } else {
+            if(SacrificesBuilt < 3){
+                if(rc.canBuildRobot(RobotType.SOLDIER, dir)){
+                    rc.buildRobot(RobotType.SOLDIER, dir);
+                    SacrificesBuilt++;
+                    RobotInfo[] findSoldier = rc.senseNearbyRobots(1);
+                    for(RobotInfo soldier : findSoldier){
+                        if(soldier.location.equals(new MapLocation(rc.getLocation().x + dir.dx, rc.getLocation().y + dir.dy))){
+                            if(rc.readSharedArray(SACRIFICE_ID_1.getIndex()) == 0) {
+                                rc.writeSharedArray(SACRIFICE_ID_1.getIndex(), soldier.ID);
+                            }else if(rc.readSharedArray(SACRIFICE_ID_2.getIndex()) == 0) {
+                                rc.writeSharedArray(SACRIFICE_ID_2.getIndex(), soldier.ID);
+                            }else if(rc.readSharedArray(SACRIFICE_ID_3.getIndex()) == 0) {
+                                rc.writeSharedArray(SACRIFICE_ID_3.getIndex(), soldier.ID);
+                            }
+                        }
+                    }
+                }
+
+            }
             // Let's try to build a soldier.
-            if(rc.canBuildRobot(RobotType.BUILDER, dir) && SoldiersBuilt > 10 && BuildersBuilt < 4){
+            if(rc.canBuildRobot(RobotType.BUILDER, dir) && SoldiersBuilt > MAX_SOLDIERS && BuildersBuilt < 4){
                 BuildersBuilt++;
                 rc.buildRobot(RobotType.BUILDER, dir);
             } else if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
-                if(SoldiersBuilt < 10 || rc.getTeamLeadAmount(rc.getTeam()) > 350) {
+                if(SoldiersBuilt < MAX_SOLDIERS || rc.getTeamLeadAmount(rc.getTeam()) > 350) {
                     SoldiersBuilt++;
                     rc.buildRobot(RobotType.SOLDIER, dir);
                 }

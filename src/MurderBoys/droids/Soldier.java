@@ -3,9 +3,6 @@ package MurderBoys.droids;
 import MurderBoys.droids.base.BaseDroid;
 import battlecode.common.*;
 
-import java.util.Map;
-import java.util.Objects;
-
 import static MurderBoys.droids.base.BaseDroid.INDEX.*;
 import static battlecode.common.RobotType.*;
 
@@ -13,62 +10,123 @@ import static battlecode.common.RobotType.*;
 public class Soldier extends BaseDroid {
 
     public static void TakeTurn() throws GameActionException {
-        RobotInfo[] friendlyRobots = rc.senseNearbyRobots(ARCHON.actionRadiusSquared, rc.getTeam());
-        boolean nearHealer = false;
-        for (RobotInfo friendly : friendlyRobots) {
-            if (friendly.type == ARCHON) {
-                nearHealer = true;
-            }
-        }
-        if(rc.getHealth() < rt.getMaxHealth(rc.getLevel()) && nearHealer) {
-            //WAIT HERE
-        }
-        else if(rc.getHealth() < rt.health/2.5) {
-            RunToFightAnotherDay();
-        }else {
-            RobotInfo[] enemies = rc.senseNearbyRobots(rt.actionRadiusSquared, rc.getTeam().opponent());
 
-            if (enemies.length > 0) {
-                MapLocation toAttack = enemies[0].location;
-                if (rc.canAttack(toAttack)) {
-                    rc.attack(toAttack);
+        if(rc.readSharedArray(SACRIFICE_ID_1.getIndex()) == rc.getID() ||
+                rc.readSharedArray(SACRIFICE_ID_2.getIndex()) == rc.getID() ||
+                rc.readSharedArray(SACRIFICE_ID_3.getIndex()) == rc.getID()) {
+
+            SUPERSMARTYPANTS = true;
+        }
+
+        if(SUPERSMARTYPANTS){
+            if(SACDirection == null) {
+                if (rc.readSharedArray(SACRIFICE_ID_1.getIndex()) == rc.getID()) {
+                    MapLocation CallLight = BringInLight();
+                    if (CallLight.x == 0) {
+                        SACDirection = Direction.WEST;
+                    } else {
+                        SACDirection = Direction.EAST;
+                    }
                 }
-
-                if (!rc.canSenseRobot(enemies[0].ID)) {
-                    System.out.println("Oh, Boy here I go killing again!");
-                    rc.setIndicatorString("Oh, Boy here I go killing again!");
-                    if (enemies[0].ID == rc.readSharedArray(ENEMY_1_BOTID.getIndex())) {
-                        rc.writeSharedArray(ENEMY_1_BOTID.getIndex(), 0);
-                        rc.writeSharedArray(ENEMY_1_X.getIndex(), 65535);
-                        rc.writeSharedArray(ENEMY_1_Y.getIndex(), 65535);
-                        rc.setIndicatorString("I will kill anyone, anywhere. Children, animals, old people, doesn't matter.");
-                        System.out.println("I will kill anyone, anywhere. Children, animals, old people, doesn't matter.");
+                if (rc.readSharedArray(SACRIFICE_ID_2.getIndex()) == rc.getID()) {
+                    MapLocation CallLight = BringInLight();
+                    if (CallLight.y == 0) {
+                        SACDirection = Direction.SOUTH;
+                    } else {
+                        SACDirection = Direction.NORTH;
+                    }
+                }
+                if (rc.readSharedArray(SACRIFICE_ID_3.getIndex()) == rc.getID()) {
+                    MapLocation CallLight = BringInLight();
+                    int YDirection = 0;
+                    int XDirection = 0;
+                    if (CallLight.y == 0 && CallLight.x == 0) {
+                        SACDirection = Direction.SOUTHWEST;
+                    } else if (CallLight.y > 0 && CallLight.x > 0){
+                        SACDirection = Direction.NORTHEAST;
+                    } else if(CallLight.y == 0 && CallLight.x > 0) {
+                        SACDirection = Direction.NORTHWEST;
+                    }else{
+                        SACDirection = Direction.SOUTHEAST;
                     }
                 }
             }
-            lookForEnemies();
-
-            Direction dir = directions[rng.nextInt(directions.length)];
-
-            if (EnemyArchonsLocation.compareTo(noLocation) != 0) {
-                dir = rc.getLocation().directionTo(EnemyArchonsLocation);
-                rc.setIndicatorString("Going toward my target enemy Archon " + EnemyArchonsLocation);
-                rc.setIndicatorLine(rc.getLocation(), EnemyArchonsLocation, 220, 220, 100);
-            } else if (FirstEnemyLocation.compareTo(noLocation) != 0) {
-                dir = rc.getLocation().directionTo(FirstEnemyLocation);
-                rc.setIndicatorString("Going toward my target enemy " + FirstEnemyLocation);
-                rc.setIndicatorLine(rc.getLocation(), EnemyArchonsLocation, 220, 220, 100);
+            rc.setIndicatorString("IM GOING FOREVER" + SACDirection);
+            if (rc.canMove(SACDirection)) {
+                rc.move(SACDirection);
             }
+        }
 
-            if (rc.canMove(dir)) {
-                while (rc.canMove(dir)) {
-                    rc.move(dir);
+        if(!SUPERSMARTYPANTS) {
+            RobotInfo[] friendlyRobots = rc.senseNearbyRobots(ARCHON.actionRadiusSquared, rc.getTeam());
+            boolean nearHealer = false;
+            for (RobotInfo friendly : friendlyRobots) {
+                if (friendly.type == ARCHON) {
+                    nearHealer = true;
                 }
+            }
+            if (rc.getHealth() < rt.getMaxHealth(rc.getLevel()) && nearHealer) {
+                //WAIT HERE
+            } else if (rc.getHealth() < rt.health / 2.5) {
+                RunToFightAnotherDay();
             } else {
-                dir = directions[rng.nextInt(directions.length)];
+                RobotInfo[] enemies = rc.senseNearbyRobots(rt.actionRadiusSquared, rc.getTeam().opponent());
+
+                if (enemies.length > 0) {
+                    RobotInfo enemyToAttack = enemies[0];
+                    for (RobotInfo enemy : enemies) {
+                        if (enemy.type == SOLDIER || enemy.type == WATCHTOWER || enemy.type == SAGE) {
+                            enemyToAttack = enemy;
+                            break;
+                        }
+                    }
+                    if (rc.canAttack(enemyToAttack.location)) {
+                        rc.attack(enemyToAttack.location);
+                    }
+
+                    if (!rc.canSenseRobot(enemyToAttack.ID)) {
+                        rc.setIndicatorString("Oh, Boy here I go killing again!");
+                        if (enemyToAttack.ID == rc.readSharedArray(ENEMY_1_BOTID.getIndex())) {
+                            if (enemyToAttack.type != ARCHON) {
+                                rc.writeSharedArray(ENEMY_ARCHON_BOTID.getIndex(), 0);
+                                rc.writeSharedArray(ENEMY_ARCHON_X.getIndex(), 65535);
+                                rc.writeSharedArray(ENEMY_ARCHON_Y.getIndex(), 65535);
+                                rc.setIndicatorString("I will kill anyone, anywhere. Children, animals, old people, doesn't matter.");
+                                System.out.println("I will kill anyone, anywhere. Children, animals, old people, doesn't matter.");
+                            } else {
+                                rc.writeSharedArray(ENEMY_1_BOTID.getIndex(), 0);
+                                rc.writeSharedArray(ENEMY_1_X.getIndex(), 65535);
+                                rc.writeSharedArray(ENEMY_1_Y.getIndex(), 65535);
+                                rc.setIndicatorString("I will kill anyone, anywhere. Children, animals, old people, doesn't matter.");
+                                System.out.println("I will kill anyone, anywhere. Children, animals, old people, doesn't matter.");
+                            }
+                        }
+                    }
+                }
+                lookForEnemies();
+
+                Direction dir = directions[rng.nextInt(directions.length)];
+
+                if (!EnemyArchonsLocation.isWithinDistanceSquared(rc.getLocation(), rt.actionRadiusSquared)) {
+                    dir = rc.getLocation().directionTo(EnemyArchonsLocation);
+                    rc.setIndicatorString("Going toward my target enemy Archon " + EnemyArchonsLocation);
+                    rc.setIndicatorLine(rc.getLocation(), EnemyArchonsLocation, 220, 220, 100);
+                } else if (!FirstEnemyLocation.isWithinDistanceSquared(rc.getLocation(), rt.actionRadiusSquared)) {
+                    dir = rc.getLocation().directionTo(FirstEnemyLocation);
+                    rc.setIndicatorString("Going toward my target enemy " + FirstEnemyLocation);
+                    rc.setIndicatorLine(rc.getLocation(), EnemyArchonsLocation, 220, 220, 100);
+                }
+
                 if (rc.canMove(dir)) {
-                    rc.move(dir);
-                    rc.setIndicatorLine(rc.getLocation(), new MapLocation(rc.getLocation().x + dir.dx, rc.getLocation().y + dir.dy), 220, 220, 100);
+                    while (rc.canMove(dir)) {
+                        rc.move(dir);
+                    }
+                } else {
+                    dir = directions[rng.nextInt(directions.length)];
+                    if (rc.canMove(dir)) {
+                        rc.move(dir);
+                        rc.setIndicatorLine(rc.getLocation(), new MapLocation(rc.getLocation().x + dir.dx, rc.getLocation().y + dir.dy), 220, 220, 100);
+                    }
                 }
             }
         }
@@ -79,13 +137,13 @@ public class Soldier extends BaseDroid {
     }
 
     public static void lookForEnemies() throws GameActionException {
-        if(rc.getLocation().compareTo(FirstEnemyLocation) < 3 && rc.canSenseRobot(ENEMY_1_BOTID.getIndex())){
+        if(rc.getLocation().isWithinDistanceSquared(FirstEnemyLocation, rt.actionRadiusSquared) && !rc.canSenseRobot(ENEMY_1_BOTID.getIndex())){
             rc.writeSharedArray(ENEMY_1_BOTID.getIndex(), 0);
             rc.writeSharedArray(ENEMY_1_X.getIndex(), 65535);
             rc.writeSharedArray(ENEMY_1_Y.getIndex(), 65535);
         }
 
-        if(rc.getLocation().compareTo(EnemyArchonsLocation) < 3 && rc.canSenseRobot(ENEMY_1_BOTID.getIndex())){
+        if(rc.getLocation().isWithinDistanceSquared(EnemyArchonsLocation, rt.actionRadiusSquared) && !rc.canSenseRobot(ENEMY_ARCHON_BOTID.getIndex())){
             rc.writeSharedArray(ENEMY_ARCHON_BOTID.getIndex(), 0);
             rc.writeSharedArray(ENEMY_ARCHON_X.getIndex(), 65535);
             rc.writeSharedArray(ENEMY_ARCHON_Y.getIndex(), 65535);
