@@ -4,14 +4,15 @@ import battlecode.common.*;
 
 import java.util.Random;
 
-import static ColdPocket.Bots.Archon.MinersAlive;
-import static ColdPocket.Bots.Archon.SoldiersAlive;
-import static ColdPocket.Bots.Archon.LaboratorysAlive;
-import static ColdPocket.Bots.Archon.WatchTowersAlive;
-import static ColdPocket.Bots.Archon.BuildersAlive;
-import static ColdPocket.Bots.Archon.SagesAlive;
 
 public abstract class Droid {
+    public static int MinersAlive = 0;
+    public static int SoldiersAlive = 0;
+    public static int LaboratorysAlive = 0;
+    public static int WatchTowersAlive = 0;
+    public static int BuildersAlive = 0;
+    public static int SagesAlive = 0;
+
     public static RobotController rc;
     public static final Direction[] directions = {
             Direction.NORTH,
@@ -196,23 +197,19 @@ public abstract class Droid {
         return 0;
     }
 
-    public static void PlaySafe() throws InterruptedException, GameActionException {
-        if(SoldiersAlive > 5){
-            rc.wait();
+    public static int PlaySafe() throws InterruptedException, GameActionException {
+        if(SoldiersAlive < 5 && rc.getRoundNum() < 100){
+            return 1;
         }
-        else{
-            Attack();
-        }
+        return 0;
+
 
     }
 
 
-    public static void Attack() throws GameActionException {
+    public static boolean Attack() throws GameActionException {
         int index = 1;
         while (true) {
-            checkForEnemy();
-            lookForMinerals();
-            attackAnything();
             if (rc.readSharedArray(index) != 65535 && rc.readSharedArray(index + 1) != 65535) {
                 moveToLocation(new MapLocation(rc.readSharedArray(index), rc.readSharedArray(index + 1)));
 
@@ -240,13 +237,11 @@ public abstract class Droid {
                     String TowerTarget="Laboratory";
                     rc.setIndicatorString("Moving towards " + rc.readSharedArray(index) + "," + rc.readSharedArray(index + 1) + " | Tower: " + TowerTarget);
                 }
-                break;
+                return false;
             }
             index = index + 2;
             if (index > 11) {
-                moveRandomLocation();
-                attackAnything();
-                break;
+                return true;
             }
         }
     }
