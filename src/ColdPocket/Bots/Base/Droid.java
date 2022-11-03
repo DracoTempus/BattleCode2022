@@ -95,18 +95,13 @@ public abstract class Droid {
     }
 
     public static void attackAnything() throws GameActionException {
-        int radius = rc.getType().actionRadiusSquared;
         Team opponent = rc.getTeam().opponent();
-        RobotInfo[] enemies = rc.senseNearbyRobots(radius, opponent);
-        if (enemies.length > 0) {
-            MapLocation toAttack = enemies[0].location;
-            int enemyID = enemies[0].getID();
-            if (rc.canAttack(toAttack)) {
-                rc.attack(toAttack);
-            if(checkIfExists(enemyID, 13,18) && enemies[0].getHealth() < 1){
-                System.out.println("Killed " + enemyID);
-            }
+        RobotInfo[] enemies = rc.senseNearbyRobots(-1, opponent);
+        if(enemies.length > 0){
+            MapLocation MapToAttack = enemies[0].location;
 
+            if (rc.canAttack(MapToAttack)) {
+                rc.attack(MapToAttack);
             }
         }
     }
@@ -145,15 +140,15 @@ public abstract class Droid {
         return ClosestMappoint;
     }
 
-    public static boolean checkIfExists(int Exists, int minIndex, int maxIndex) throws GameActionException {
+    public static int checkInArray(int Exists, int minIndex, int maxIndex) throws GameActionException {
         while(minIndex <= maxIndex){
             int ShareArray = rc.readSharedArray(minIndex);
             minIndex++;
             if (ShareArray == Exists){
-                return true;
+                return minIndex;
             }
         }
-        return false;
+        return 0;
     }
     public static void setValues() throws GameActionException {
         for (int index = 0; index < 64; index++) {
@@ -197,7 +192,7 @@ public abstract class Droid {
         return 0;
     }
 
-    public static int PlaySafe() throws InterruptedException, GameActionException {
+    public static int PlaySafe(){
         if(SoldiersAlive < 5 && rc.getRoundNum() < 100){
             return 1;
         }
@@ -207,42 +202,49 @@ public abstract class Droid {
     }
 
 
-    public static boolean Attack() throws GameActionException {
+    public static boolean canAttack() throws GameActionException {
         int index = 1;
         while (true) {
+            if (index > 11) {
+                return true;
+            }
             if (rc.readSharedArray(index) != 65535 && rc.readSharedArray(index + 1) != 65535) {
-                moveToLocation(new MapLocation(rc.readSharedArray(index), rc.readSharedArray(index + 1)));
 
+                if(rc.getLocation().distanceSquaredTo(new MapLocation(rc.readSharedArray(index), rc.readSharedArray(index + 1))) < 4){
+                    rc.writeSharedArray(index, 65535);
+                    rc.writeSharedArray(index + 1, 65535);
+                    index = index + 2;
+                    continue;
+                }
+
+                moveToLocation(new MapLocation(rc.readSharedArray(index), rc.readSharedArray(index + 1)));
                 if(index == 1){
                     String TowerTarget="Archon";
-                    rc.setIndicatorString("Moving towards " + rc.readSharedArray(index) + "," + rc.readSharedArray(index + 1) + " | Tower: " + TowerTarget);
+                    rc.setIndicatorString("Moving towards " + rc.readSharedArray(index) + "," + rc.readSharedArray(index + 1) + " | Tower: " + TowerTarget + " | ID: " + rc.readSharedArray(13));
                 }
                 else if(index == 3){
                     String TowerTarget="Soldier";
-                    rc.setIndicatorString("Moving towards " + rc.readSharedArray(index) + "," + rc.readSharedArray(index + 1) + " | Tower: " + TowerTarget);
+                    rc.setIndicatorString("Moving towards " + rc.readSharedArray(index) + "," + rc.readSharedArray(index + 1) + " | Tower: " + TowerTarget + " | ID: " + rc.readSharedArray(14));
                 }
                 else if(index == 5){
                     String TowerTarget="Miner";
-                    rc.setIndicatorString("Moving towards " + rc.readSharedArray(index) + "," + rc.readSharedArray(index + 1) + " | Tower: " + TowerTarget);
+                    rc.setIndicatorString("Moving towards " + rc.readSharedArray(index) + "," + rc.readSharedArray(index + 1) + " | Tower: " + TowerTarget + " | ID: " + rc.readSharedArray(15));
                 }
                 else if(index == 7){
                     String TowerTarget="Sage";
-                    rc.setIndicatorString("Moving towards " + rc.readSharedArray(index) + "," + rc.readSharedArray(index + 1) + " | Tower: " + TowerTarget);
+                    rc.setIndicatorString("Moving towards " + rc.readSharedArray(index) + "," + rc.readSharedArray(index + 1) + " | Tower: " + TowerTarget + " | ID: " + rc.readSharedArray(16));
                 }
                 else if(index == 9){
                     String TowerTarget="Watch Tower";
-                    rc.setIndicatorString("Moving towards " + rc.readSharedArray(index) + "," + rc.readSharedArray(index + 1) + " | Tower: " + TowerTarget);
+                    rc.setIndicatorString("Moving towards " + rc.readSharedArray(index) + "," + rc.readSharedArray(index + 1) + " | Tower: " + TowerTarget + " | ID: " + rc.readSharedArray(17));
                 }
                 else if(index == 11){
                     String TowerTarget="Laboratory";
-                    rc.setIndicatorString("Moving towards " + rc.readSharedArray(index) + "," + rc.readSharedArray(index + 1) + " | Tower: " + TowerTarget);
+                    rc.setIndicatorString("Moving towards " + rc.readSharedArray(index) + "," + rc.readSharedArray(index + 1) + " | Tower: " + TowerTarget + " | ID: " + rc.readSharedArray(18));
                 }
                 return false;
             }
             index = index + 2;
-            if (index > 11) {
-                return true;
-            }
         }
     }
 

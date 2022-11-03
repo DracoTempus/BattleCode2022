@@ -13,37 +13,48 @@ public class Archon extends Droid {
 
 
     static Direction randomDir = directions[rng.nextInt(directions.length)];
-    private static void Build(String type, Direction dir)throws GameActionException {
+    private static void Build(RobotController rc,String type, Direction dir)throws GameActionException {
         if(type.equalsIgnoreCase("miner") && rc.canBuildRobot(RobotType.MINER, dir)){
             rc.buildRobot(RobotType.MINER, dir);
-            rc.setIndicatorString("Trying to build a " + type);
+            rc.setIndicatorString("Making: " + type + " | Round Num: " + rc.getRoundNum());
             MinersAlive++;
         }
-        if(type.equalsIgnoreCase("soldier")&& rc.canBuildRobot(RobotType.SOLDIER, dir)){
+        else if(type.equalsIgnoreCase("soldier")&& rc.canBuildRobot(RobotType.SOLDIER, dir)){
             rc.buildRobot(RobotType.SOLDIER, dir);
-            rc.setIndicatorString("Trying to build a " + type);
+            rc.setIndicatorString("Making: " + type + " | Round Num: " + rc.getRoundNum());
             SoldiersAlive++;
         }
-        if(type.equalsIgnoreCase("laboratory") && rc.canBuildRobot(RobotType.LABORATORY, dir)){
+
+        else if(type.equalsIgnoreCase("laboratory") && rc.canBuildRobot(RobotType.LABORATORY, dir)){
             rc.buildRobot(RobotType.LABORATORY, dir);
-            rc.setIndicatorString("Trying to build a " + type);
+            rc.setIndicatorString("Making: " + type + " | Round Num: " + rc.getRoundNum());
             LaboratorysAlive++;
         }
-        if(type.equalsIgnoreCase("watchtower") && rc.canBuildRobot(RobotType.WATCHTOWER, dir)){
+
+        else if(type.equalsIgnoreCase("watchtower") && rc.canBuildRobot(RobotType.WATCHTOWER, dir)){
             rc.buildRobot(RobotType.WATCHTOWER, dir);
-            rc.setIndicatorString("Trying to build a " + type);
+            rc.setIndicatorString("Making: " + type + " | Round Num: " + rc.getRoundNum());
             WatchTowersAlive++;
         }
-        if(type.equalsIgnoreCase("builder") && rc.canBuildRobot(RobotType.BUILDER, dir)){
+
+        else if(type.equalsIgnoreCase("builder") && rc.canBuildRobot(RobotType.BUILDER, dir)){
             rc.buildRobot(RobotType.BUILDER, dir);
-            rc.setIndicatorString("Trying to build a " + type);
+            rc.setIndicatorString("Making: " + type + " | Round Num: " + rc.getRoundNum());
             BuildersAlive++;
         }
-        if(type.equalsIgnoreCase("sage") && rc.canBuildRobot(RobotType.SAGE, dir)){
+
+        else if(type.equalsIgnoreCase("sage") && rc.canBuildRobot(RobotType.SAGE, dir)){
             rc.buildRobot(RobotType.SAGE, dir);
-            rc.setIndicatorString("Trying to build a " + type);
+            rc.setIndicatorString("Making: " + type + " | Round Num: " + rc.getRoundNum());
             SagesAlive++;
+
         }
+        else{
+            if(rc.getActionCooldownTurns() == 0){
+                rc.setIndicatorString("Can't afford " + type);
+            }
+        }
+
     }
 
     private static void ArchonMove(Direction Dir) throws GameActionException {
@@ -58,18 +69,20 @@ public class Archon extends Droid {
     }
 
     private static void tryBuildAny() throws GameActionException {
-        if(MinersAlive < 1 && rc.getRoundNum() < 50 || MinersAlive < 10 && SoldiersAlive / MinersAlive >= 2){
-            Build("miner", randomDir);
+        if(MinersAlive <= 3 && rc.getRoundNum() <= 100 || MinersAlive < SoldiersAlive/2){
+            Build(rc,"miner", randomDir);
         }
-        else if(SoldiersAlive < MinersAlive * 2 || rc.getRoundNum() < 100){
-            Build("soldier", randomDir);
+        else if(SoldiersAlive < MinersAlive * 2 || rc.getRoundNum() <= 100 || rc.canBuildRobot(RobotType.SOLDIER, randomDir)){
+            if(rc.canBuildRobot(RobotType.SOLDIER, randomDir)){
+                Build(rc,"soldier", randomDir);
+            }
         }
         else{
             rc.setIndicatorString("Can't Afford anything, Waiting");
         }
     }
 
-    private static void ArchonGetSafe() throws GameActionException {
+    private static void ArchonGoCorner() throws GameActionException {
         if(rc.getLocation().x < rc.getMapWidth()/2 && rc.canTransform()){
             ArchonMove(Direction.WEST);
         }

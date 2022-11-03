@@ -8,7 +8,7 @@ public class Soldier extends Droid {
 
     public static void TakeTurn() throws GameActionException, InterruptedException {
         if(PlaySafe() == 0){
-            if(Attack()){
+            if(canAttack()){
                 moveRandomLocation();
                 attackAnything();
             }
