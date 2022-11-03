@@ -16,7 +16,7 @@ public class Archon extends Droid {
 
     public static void TakeTurn() throws GameActionException {
         Direction dir = directions[rng.nextInt(directions.length)];
-        if (MinersAlive < 9 && SoldiersAlive > 1 || MinersAlive < 9 && rc.getRoundNum() == 1) {
+        if (MinersAlive < 3 && SoldiersAlive > 1 && rc.getRoundNum() <500|| MinersAlive < 9 && rc.getRoundNum() == 1) {
             if (rc.canBuildRobot(RobotType.MINER, dir)) {
                 Spawn("miner");
                 MinersAlive++;
