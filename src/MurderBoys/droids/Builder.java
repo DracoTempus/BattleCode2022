@@ -26,6 +26,20 @@ public class Builder extends BaseDroid {
             }
         }
 
+        if(WATCHTOWERBUILT){
+            WATCHTOWERBUILT = false;
+            RobotInfo[] towerCheck = rc.senseNearbyRobots(1);
+            for (RobotInfo friend:towerCheck) {
+                if(friend.type == WATCHTOWER){
+                    WATCHTOWERBUILT = true;
+                    if(rc.canMutate(friend.location)){
+                        rc.mutate(friend.location);
+                    }
+                    break;
+                }
+            }
+        }
+
         Direction ranDir = directions[rng.nextInt(directions.length-1)];
         rc.setIndicatorString("IM AM WITHIN " + rc.getLocation().compareTo(MyArchon) + " SPACES OF MY ARCHON");
         if(rc.getLocation().isWithinDistanceSquared(MyArchon, 2)){
