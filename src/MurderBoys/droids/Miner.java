@@ -13,17 +13,17 @@ public class Miner extends BaseDroid {
             rc.writeSharedArray(AMOUNT_OF_MINERS.getIndex(), rc.readSharedArray(AMOUNT_OF_MINERS.getIndex()) -1);
             rc.disintegrate();
         }
+
         while(rc.getHealth() < rt.health/2){
             RunToFightAnotherDay();
         }
 
-        MapLocation me = rc.getLocation();
-        if(!MineNearby(rc)) {
+        if(!MineNearby()) {
             MoveToMine(rc);
         }
     }
 
-    private static boolean MineNearby(RobotController rc) throws GameActionException {
+    private static boolean MineNearby() throws GameActionException {
         boolean didIMine = false;
         MapLocation[] nearMines = findMinesByDistance(1);
         if(nearMines.length > 0){
@@ -37,15 +37,6 @@ public class Miner extends BaseDroid {
                 }
         }
         return findMinesByDistance(1).length > 0;
-    }
-
-    private static MapLocation[] findMinesByDistance(int distance) throws GameActionException {
-        MapLocation[] tmpLeadML = rc.senseNearbyLocationsWithLead(distance);
-        MapLocation[] tmpGoldML = rc.senseNearbyLocationsWithGold(distance);
-        MapLocation[] Mines = new MapLocation[tmpLeadML.length + tmpGoldML.length];
-        System.arraycopy(tmpLeadML, 0, Mines, 0, tmpLeadML.length);
-        System.arraycopy(tmpGoldML, 0, Mines, tmpLeadML.length, tmpGoldML.length);
-        return Mines;
     }
 
     private static void MoveToMine(RobotController rc) throws GameActionException {
@@ -73,17 +64,22 @@ public class Miner extends BaseDroid {
                 }
             }
         }
-
-        Direction toMine = rc.getLocation().directionTo(BestLocation);
-        if (rc.canMove(toMine)) {
-            rc.move(toMine);
-        }else{
-            Direction dir = directions[rng.nextInt(directions.length)];
+        Direction dir = directions[rng.nextInt(directions.length)];
+        if(BestLocation == rc.getLocation()){
             if (rc.canMove(dir)) {
                 rc.move(dir);
             }
-        }
+        }else {
+            Direction toMine = rc.getLocation().directionTo(BestLocation);
+            if (rc.canMove(toMine)) {
+                rc.move(toMine);
+            } else {
 
+                if (rc.canMove(dir)) {
+                    rc.move(dir);
+                }
+            }
+        }
 
     }
 

@@ -13,12 +13,16 @@ public class Soldier extends BaseDroid {
 
         if(rc.readSharedArray(SACRIFICE_ID_1.getIndex()) == rc.getID() ||
                 rc.readSharedArray(SACRIFICE_ID_2.getIndex()) == rc.getID() ||
-                rc.readSharedArray(SACRIFICE_ID_3.getIndex()) == rc.getID()) {
+                rc.readSharedArray(SACRIFICE_ID_3.getIndex()) == rc.getID() ||
+                rc.readSharedArray(SACRIFICE_ID_4.getIndex()) == rc.getID() ||
+                rc.readSharedArray(SACRIFICE_ID_5.getIndex()) == rc.getID() ||
+                rc.readSharedArray(SACRIFICE_ID_6.getIndex()) == rc.getID()) {
 
             SUPERSMARTYPANTS = true;
         }
 
         if(SUPERSMARTYPANTS){
+            lookForEnemies();
             if(SACDirection == null) {
                 if (rc.readSharedArray(SACRIFICE_ID_1.getIndex()) == rc.getID()) {
                     MapLocation CallLight = BringInLight();
@@ -51,27 +55,12 @@ public class Soldier extends BaseDroid {
                     }
                 }
             }
-            rc.setIndicatorString("IM GOING FOREVER" + SACDirection);
+
+            rc.setIndicatorString("IM GOING FOREVER" + SACDirection + " " + rc.getLocation().isWithinDistanceSquared(EnemyArchonsLocation, 1));
             if (rc.canMove(SACDirection)) {
                 rc.move(SACDirection);
-            }
-        }
-
-        if(!SUPERSMARTYPANTS) {
-            RobotInfo[] friendlyRobots = rc.senseNearbyRobots(ARCHON.actionRadiusSquared, rc.getTeam());
-            boolean nearHealer = false;
-            for (RobotInfo friendly : friendlyRobots) {
-                if (friendly.type == ARCHON) {
-                    nearHealer = true;
-                }
-            }
-            if (rc.getHealth() < rt.getMaxHealth(rc.getLevel()) && nearHealer) {
-                //WAIT HERE
-            } else if (rc.getHealth() < rt.health / 2.5) {
-                RunToFightAnotherDay();
-            } else {
+            }else{
                 RobotInfo[] enemies = rc.senseNearbyRobots(rt.actionRadiusSquared, rc.getTeam().opponent());
-
                 if (enemies.length > 0) {
                     RobotInfo enemyToAttack = enemies[0];
                     for (RobotInfo enemy : enemies) {
@@ -80,7 +69,7 @@ public class Soldier extends BaseDroid {
                             break;
                         }
                     }
-                    if (rc.canAttack(enemyToAttack.location)) {
+                    while (rc.canAttack(enemyToAttack.location)) {
                         rc.attack(enemyToAttack.location);
                     }
 
@@ -103,22 +92,40 @@ public class Soldier extends BaseDroid {
                         }
                     }
                 }
-                lookForEnemies();
+            }
+        }
+
+        if(!SUPERSMARTYPANTS) {
+            lookForEnemies();
+            RobotInfo[] friendlyRobots = rc.senseNearbyRobots(ARCHON.actionRadiusSquared, rc.getTeam());
+            boolean nearHealer = false;
+            for (RobotInfo friendly : friendlyRobots) {
+                if (friendly.type == ARCHON) {
+                    nearHealer = true;
+                }
+            }
+            if (rc.getHealth() < rt.getMaxHealth(rc.getLevel()) && nearHealer) {
+                TryAttack();
+            } else if (rc.getHealth() < rt.health / 2.5) {
+                RunToFightAnotherDay();
+            } else {
+                TryAttack();
+            }
 
                 Direction dir = directions[rng.nextInt(directions.length)];
 
-                if (!EnemyArchonsLocation.isWithinDistanceSquared(rc.getLocation(), rt.actionRadiusSquared)) {
+                if (EnemyArchonsLocation.distanceSquaredTo(noLocation) > 314 && EnemyArchonsLocation.distanceSquaredTo(rc.getLocation()) < rt.actionRadiusSquared) {
                     dir = rc.getLocation().directionTo(EnemyArchonsLocation);
                     rc.setIndicatorString("Going toward my target enemy Archon " + EnemyArchonsLocation);
                     rc.setIndicatorLine(rc.getLocation(), EnemyArchonsLocation, 220, 220, 100);
-                } else if (!FirstEnemyLocation.isWithinDistanceSquared(rc.getLocation(), rt.actionRadiusSquared)) {
+                } else if (FirstEnemyLocation.distanceSquaredTo(noLocation) > 314 && FirstEnemyLocation.distanceSquaredTo(rc.getLocation()) < rt.actionRadiusSquared) {
                     dir = rc.getLocation().directionTo(FirstEnemyLocation);
                     rc.setIndicatorString("Going toward my target enemy " + FirstEnemyLocation);
                     rc.setIndicatorLine(rc.getLocation(), EnemyArchonsLocation, 220, 220, 100);
                 }
 
                 if (rc.canMove(dir)) {
-                    while (rc.canMove(dir)) {
+                    if(rc.canMove(dir)) {
                         rc.move(dir);
                     }
                 } else {
@@ -129,7 +136,7 @@ public class Soldier extends BaseDroid {
                     }
                 }
             }
-        }
+            findMinesByDistance(rt.visionRadiusSquared);
     }
 
     public static void resetTarget(){
@@ -137,16 +144,21 @@ public class Soldier extends BaseDroid {
     }
 
     public static void lookForEnemies() throws GameActionException {
-        if(rc.getLocation().isWithinDistanceSquared(FirstEnemyLocation, rt.actionRadiusSquared) && !rc.canSenseRobot(ENEMY_1_BOTID.getIndex())){
+
+        if(rc.readSharedArray(ENEMY_1_BOTID.getIndex()) != 0 && !rc.getLocation().isWithinDistanceSquared(FirstEnemyLocation, 2)
+                && !rc.canSenseRobot(rc.readSharedArray(ENEMY_1_BOTID.getIndex()))){
             rc.writeSharedArray(ENEMY_1_BOTID.getIndex(), 0);
             rc.writeSharedArray(ENEMY_1_X.getIndex(), 65535);
             rc.writeSharedArray(ENEMY_1_Y.getIndex(), 65535);
+            FirstEnemyLocation = new MapLocation(rc.readSharedArray(ENEMY_1_X.getIndex()), rc.readSharedArray(ENEMY_1_Y.getIndex()));
         }
 
-        if(rc.getLocation().isWithinDistanceSquared(EnemyArchonsLocation, rt.actionRadiusSquared) && !rc.canSenseRobot(ENEMY_ARCHON_BOTID.getIndex())){
+        if(rc.readSharedArray(ENEMY_ARCHON_BOTID.getIndex()) != 0 && !rc.getLocation().isWithinDistanceSquared(EnemyArchonsLocation,2)
+                && !rc.canSenseRobot(rc.readSharedArray(ENEMY_ARCHON_BOTID.getIndex()))){
             rc.writeSharedArray(ENEMY_ARCHON_BOTID.getIndex(), 0);
             rc.writeSharedArray(ENEMY_ARCHON_X.getIndex(), 65535);
             rc.writeSharedArray(ENEMY_ARCHON_Y.getIndex(), 65535);
+            EnemyArchonsLocation = new MapLocation(rc.readSharedArray(ENEMY_ARCHON_X.getIndex()), rc.readSharedArray(ENEMY_ARCHON_Y.getIndex()));
         }
 
         RobotInfo[] enemyDroids = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
@@ -166,9 +178,9 @@ public class Soldier extends BaseDroid {
                 }
             }
 
-        if(new MapLocation(rc.readSharedArray(ENEMY_ARCHON_X.getIndex()), rc.readSharedArray(ENEMY_ARCHON_Y.getIndex())).compareTo(EnemyArchonsLocation) != 0){
+        if(rc.readSharedArray(ENEMY_ARCHON_BOTID.getIndex()) != 0){
             EnemyArchonsLocation = new MapLocation(rc.readSharedArray(ENEMY_ARCHON_X.getIndex()), rc.readSharedArray(ENEMY_ARCHON_Y.getIndex()));
-        }else if(new MapLocation(rc.readSharedArray(ENEMY_1_X.getIndex()), rc.readSharedArray(ENEMY_1_Y.getIndex())).compareTo(FirstEnemyLocation) != 0){
+        }else if(rc.readSharedArray(ENEMY_1_BOTID.getIndex()) != 0 ){
             FirstEnemyLocation = new MapLocation(rc.readSharedArray(ENEMY_1_X.getIndex()), rc.readSharedArray(ENEMY_1_Y.getIndex()));
         }
     }

@@ -6,6 +6,7 @@ import battlecode.common.GameActionException;
 import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
 
+import static MurderBoys.droids.base.BaseDroid.INDEX.LABORATORY_BUILDER;
 import static battlecode.common.RobotType.*;
 
 
@@ -17,21 +18,31 @@ public class Builder extends BaseDroid {
 
         RobotInfo[] friendlyRobots = rc.senseNearbyRobots(rc.getType().actionRadiusSquared, rc.getTeam());
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(rc.getType().visionRadiusSquared, rc.getTeam().opponent());
+        Direction ranDir = directions[rng.nextInt(directions.length-1)];
+
+        if(rc.readSharedArray(LABORATORY_BUILDER.getIndex()) == rc.getID()) {
+            if (rc.canBuildRobot(LABORATORY, MyArchon.directionTo(rc.getLocation()).rotateLeft()) && !LABORATORYBUILT) {
+                LABORATORYBUILT = true;
+                rc.buildRobot(LABORATORY, MyArchon.directionTo(rc.getLocation()).rotateLeft());
+            } else if (rc.canBuildRobot(LABORATORY, ranDir) && !LABORATORYBUILT) {
+                LABORATORYBUILT = true;
+                rc.buildRobot(LABORATORY, ranDir);
+            }
+        }
 
         for (RobotInfo friendly:friendlyRobots) {
             if(friendly.health < friendly.type.health){
-                if(rc.canRepair(friendly.getLocation())){
+                while(rc.canRepair(friendly.getLocation())){
                     rc.repair(friendly.getLocation());
                 }
             }
         }
 
-        if(WATCHTOWERBUILT){
-            WATCHTOWERBUILT = false;
+        if(WATCHTOWERSBUILT > 0){
+            WATCHTOWERSBUILT++;
             RobotInfo[] towerCheck = rc.senseNearbyRobots(1);
             for (RobotInfo friend:towerCheck) {
                 if(friend.type == WATCHTOWER){
-                    WATCHTOWERBUILT = true;
                     if(rc.canMutate(friend.location)){
                         rc.mutate(friend.location);
                     }
@@ -40,26 +51,19 @@ public class Builder extends BaseDroid {
             }
         }
 
-        Direction ranDir = directions[rng.nextInt(directions.length-1)];
+
         rc.setIndicatorString("IM AM WITHIN " + rc.getLocation().compareTo(MyArchon) + " SPACES OF MY ARCHON");
         if(rc.getLocation().isWithinDistanceSquared(MyArchon, 2)){
             if(rc.canMove(ranDir)) {
                 rc.move(ranDir);
             }
         }else{
-            if(rc.canBuildRobot(WATCHTOWER, MyArchon.directionTo(rc.getLocation())) && !WATCHTOWERBUILT){
+            if(rc.canBuildRobot(WATCHTOWER, MyArchon.directionTo(rc.getLocation())) && WATCHTOWERSBUILT < 2){
                 rc.buildRobot(WATCHTOWER, MyArchon.directionTo(rc.getLocation()));
-                WATCHTOWERBUILT = true;
-            }else if(rc.canBuildRobot(WATCHTOWER, ranDir) && !WATCHTOWERBUILT){
+                WATCHTOWERSBUILT++;
+            }else if(rc.canBuildRobot(WATCHTOWER, MyArchon.directionTo(rc.getLocation())) && WATCHTOWERSBUILT < 2){
                 rc.buildRobot(WATCHTOWER, MyArchon.directionTo(rc.getLocation()));
-                WATCHTOWERBUILT = true;
-            }
-            if(rc.canBuildRobot(LABORATORY, MyArchon.directionTo(rc.getLocation()).rotateLeft()) && !LABORATORYBUILT){
-                rc.buildRobot(LABORATORY, MyArchon.directionTo(rc.getLocation()).rotateLeft());
-                LABORATORYBUILT = true;
-            }else if (rc.canBuildRobot(LABORATORY, ranDir) && !LABORATORYBUILT){
-                rc.buildRobot(LABORATORY, ranDir);
-                LABORATORYBUILT = true;
+                WATCHTOWERSBUILT++;
             }
         }
         if(rc.canBuildRobot(ARCHON, MyArchon.directionTo(rc.getLocation()).rotateRight()) && !ARCHONBUILT){

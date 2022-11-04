@@ -13,10 +13,7 @@ public class Archon extends BaseDroid {
 
         RobotInfo[] friendlyRobots = rc.senseNearbyRobots(rc.getType().actionRadiusSquared, rc.getTeam());
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(rc.getType().visionRadiusSquared, rc.getTeam().opponent());
-
-        if(rc.readSharedArray(ENEMY_ARCHON_BOTID.getIndex()) != 0){
-            MAX_SOLDIERS = 50;
-        }
+        Direction dir = directions[BUILDLOCATION];
 
         for (RobotInfo friendly:friendlyRobots) {
             if(friendly.health < friendly.type.health){
@@ -25,8 +22,23 @@ public class Archon extends BaseDroid {
                 }
             }
         }
+        if(enemyRobots.length > 0 || rc.readSharedArray(ENEMY_ARCHON_BOTID.getIndex()) != 0 && SoldiersBuilt < 100){
+            if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
+                rc.buildRobot(RobotType.SOLDIER, dir);
+                SoldiersBuilt++;
+            }
+            if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
+                rc.buildRobot(RobotType.SOLDIER, dir);
+                SoldiersBuilt++;
+            }
+        }
 
-        Direction dir = directions[BUILDLOCATION];
+        if(rc.canBuildRobot(RobotType.SAGE, dir)){
+            rc.buildRobot(RobotType.SAGE, dir);
+            rc.writeSharedArray(SAGES_BUILT.getIndex(), rc.readSharedArray(SAGES_BUILT.getIndex()) + 1);
+        }
+
+
         int minersBuilt = rc.readSharedArray(AMOUNT_OF_MINERS.getIndex());
         if (minersBuilt < MAX_MINERS) {
             // Let's try to build a miner.
@@ -35,7 +47,18 @@ public class Archon extends BaseDroid {
                 rc.buildRobot(MINER, dir);
             }
         } else {
-            if(SacrificesBuilt < 3){
+            if(rc.canBuildRobot(RobotType.BUILDER, dir) && SoldiersBuilt > MAX_SOLDIERS && BuildersBuilt < 4 ||rc.canBuildRobot(RobotType.BUILDER, dir) && BuildersBuilt < 1){
+                BuildersBuilt++;
+                rc.buildRobot(RobotType.BUILDER, dir);
+                RobotInfo[] findLabBuilder = rc.senseNearbyRobots(1);
+                for(RobotInfo LBuilder : findLabBuilder){
+                    if(LBuilder.location.equals(new MapLocation(rc.getLocation().x + dir.dx, rc.getLocation().y + dir.dy))){
+                        if(rc.readSharedArray(LABORATORY_BUILDER.getIndex()) == 0) {
+                            rc.writeSharedArray(LABORATORY_BUILDER.getIndex(), LBuilder.ID);
+                        }
+                    }
+                }
+            } else if(SacrificesBuilt < 3){
                 if(rc.canBuildRobot(RobotType.SOLDIER, dir)){
                     rc.buildRobot(RobotType.SOLDIER, dir);
                     SacrificesBuilt++;
@@ -52,14 +75,8 @@ public class Archon extends BaseDroid {
                         }
                     }
                 }
-
-            }
-            // Let's try to build a soldier.
-            if(rc.canBuildRobot(RobotType.BUILDER, dir) && SoldiersBuilt > MAX_SOLDIERS && BuildersBuilt < 4){
-                BuildersBuilt++;
-                rc.buildRobot(RobotType.BUILDER, dir);
-            } else if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
-                if(SoldiersBuilt < MAX_SOLDIERS || rc.getTeamLeadAmount(rc.getTeam()) > 350) {
+            }else if (rc.canBuildRobot(RobotType.SOLDIER, dir) && SacrificesBuilt >=3) {
+                if(SoldiersBuilt < MAX_SOLDIERS || rc.getTeamLeadAmount(rc.getTeam()) > 300) {
                     SoldiersBuilt++;
                     rc.buildRobot(RobotType.SOLDIER, dir);
                 }

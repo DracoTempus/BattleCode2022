@@ -85,7 +85,9 @@ public strictfp class RobotPlayer {
                     case SOLDIER:
                         Soldier.TakeTurn();
                         break;
-                    case LABORATORY: // Examplefuncsplayer doesn't use any of these robot types below.
+                    case LABORATORY:
+                        Laboratory.TakeTurn();
+                        break;// Examplefuncsplayer doesn't use any of these robot types below.
                     case WATCHTOWER:
                         WatchTower.TakeTurn();
                         break;
