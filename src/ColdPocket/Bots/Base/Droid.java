@@ -4,14 +4,17 @@ import battlecode.common.*;
 
 import java.util.Random;
 
-import static ColdPocket.Bots.Archon.MinersAlive;
-import static ColdPocket.Bots.Archon.SoldiersAlive;
-import static ColdPocket.Bots.Archon.LaboratorysAlive;
-import static ColdPocket.Bots.Archon.WatchTowersAlive;
-import static ColdPocket.Bots.Archon.BuildersAlive;
-import static ColdPocket.Bots.Archon.SagesAlive;
+import static battlecode.common.RobotType.ARCHON;
+
 
 public abstract class Droid {
+    public static int MinersAlive = 0;
+    public static int SoldiersAlive = 0;
+    public static int LaboratorysAlive = 0;
+    public static int WatchTowersAlive = 0;
+    public static int BuildersAlive = 0;
+    public static int SagesAlive = 0;
+
     public static RobotController rc;
     public static final Direction[] directions = {
             Direction.NORTH,
@@ -58,54 +61,42 @@ public abstract class Droid {
                 rc.writeSharedArray(1, Tower.getLocation().x);
                 rc.writeSharedArray(2, Tower.getLocation().y);
                 rc.writeSharedArray(13, Tower.getID());
-                System.out.println("Archon Found | 1 & 2| " + Tower.getLocation().x + "," + Tower.getLocation().y);
             }
             if (Tower.getType() == RobotType.SOLDIER && Tower.team == opponent) {
                 rc.writeSharedArray(3, Tower.getLocation().x);
                 rc.writeSharedArray(4, Tower.getLocation().y);
                 rc.writeSharedArray(14, Tower.getID());
-                System.out.println("Soldier Found | 3 & 4  | " + Tower.getLocation().x + "," + Tower.getLocation().y);
             }
             if (Tower.getType() == RobotType.MINER && Tower.team == opponent) {
                 rc.writeSharedArray(5, Tower.getLocation().x);
                 rc.writeSharedArray(6, Tower.getLocation().y);
                 rc.writeSharedArray(15, Tower.getID());
-                System.out.println("Miner Found | 5 & 6 | " + Tower.getLocation().x + "," + Tower.getLocation().y);
             }
             if (Tower.getType() == RobotType.SAGE && Tower.team == opponent) {
                 rc.writeSharedArray(7, Tower.getLocation().x);
                 rc.writeSharedArray(8, Tower.getLocation().y);
                 rc.writeSharedArray(16, Tower.getID());
-                System.out.println("Sage Found | 7 & 8 | " + Tower.getLocation().x + "," + Tower.getLocation().y);
             }
             if (Tower.getType() == RobotType.WATCHTOWER && Tower.team == opponent) {
                 rc.writeSharedArray(9, Tower.getLocation().x);
                 rc.writeSharedArray(10, Tower.getLocation().y);
                 rc.writeSharedArray(17, Tower.getID());
-                System.out.println("Watch Tower Found | 9 & 10 | " + Tower.getLocation().x + "," + Tower.getLocation().y);
             }
             if (Tower.getType() == RobotType.LABORATORY && Tower.team == opponent) {
                 rc.writeSharedArray(11, Tower.getLocation().x);
                 rc.writeSharedArray(12, Tower.getLocation().y);
                 rc.writeSharedArray(18, Tower.getID());
-                System.out.println("Laboratory Found | 11 & 12 | " + Tower.getLocation().x + "," + Tower.getLocation().y);
             }
         }
     }
 
     public static void attackAnything() throws GameActionException {
-        int radius = rc.getType().actionRadiusSquared;
         Team opponent = rc.getTeam().opponent();
-        RobotInfo[] enemies = rc.senseNearbyRobots(radius, opponent);
-        if (enemies.length > 0) {
-            MapLocation toAttack = enemies[0].location;
-            int enemyID = enemies[0].getID();
-            if (rc.canAttack(toAttack)) {
-                rc.attack(toAttack);
-            if(checkIfExists(enemyID, 13,18) && enemies[0].getHealth() < 1){
-                System.out.println("Killed " + enemyID);
-            }
-
+        RobotInfo[] enemies = rc.senseNearbyRobots(-1, opponent);
+        if(enemies.length > 0){
+            MapLocation MapToAttack = enemies[0].location;
+            if (rc.canAttack(MapToAttack)) {
+                rc.attack(MapToAttack);
             }
         }
     }
@@ -144,15 +135,15 @@ public abstract class Droid {
         return ClosestMappoint;
     }
 
-    public static boolean checkIfExists(int Exists, int minIndex, int maxIndex) throws GameActionException {
+    public static int checkInArray(int Exists, int minIndex, int maxIndex) throws GameActionException {
         while(minIndex <= maxIndex){
             int ShareArray = rc.readSharedArray(minIndex);
             minIndex++;
             if (ShareArray == Exists){
-                return true;
+                return minIndex;
             }
         }
-        return false;
+        return 0;
     }
     public static void setValues() throws GameActionException {
         for (int index = 0; index < 64; index++) {
@@ -163,7 +154,6 @@ public abstract class Droid {
     public static void trySuicide(){
         if(rc.getHealth() < NearEnemyDamage()){
             rc.setIndicatorString("I died because my health was < " + NearEnemyDamage() +" | Health: " + rc.getHealth());
-            System.out.println("I died because my health was < " + NearEnemyDamage() +" | Health: " + rc.getHealth());
             if(rc.getType() == RobotType.MINER){
                 MinersAlive--;
             }
@@ -194,6 +184,87 @@ public abstract class Droid {
             }
         }
         return 0;
+    }
+
+    public static int PlaySafe(){
+        if(SoldiersAlive < 5 && rc.getRoundNum() < 100){
+            return 1;
+        }
+        return 0;
+
+
+    }
+
+
+    public static boolean canAttack() throws GameActionException {
+        int index = 1;
+        while (true) {
+            if (index > 11) {
+                return true;
+            }
+            if (rc.readSharedArray(index) != 65535 && rc.readSharedArray(index + 1) != 65535) {
+
+                if(rc.getLocation().distanceSquaredTo(new MapLocation(rc.readSharedArray(index), rc.readSharedArray(index + 1))) < 4){
+                    rc.writeSharedArray(index, 65535);
+                    rc.writeSharedArray(index + 1, 65535);
+                    index = index + 2;
+                    continue;
+                }
+
+                moveToLocation(new MapLocation(rc.readSharedArray(index), rc.readSharedArray(index + 1)));
+                if(index == 1){
+                    String TowerTarget="Archon";
+                    rc.setIndicatorString("Moving towards " + rc.readSharedArray(index) + "," + rc.readSharedArray(index + 1) + " | Tower: " + TowerTarget + " | ID: " + rc.readSharedArray(13));
+                }
+                else if(index == 3){
+                    String TowerTarget="Soldier";
+                    rc.setIndicatorString("Moving towards " + rc.readSharedArray(index) + "," + rc.readSharedArray(index + 1) + " | Tower: " + TowerTarget + " | ID: " + rc.readSharedArray(14));
+                }
+                else if(index == 5){
+                    String TowerTarget="Miner";
+                    rc.setIndicatorString("Moving towards " + rc.readSharedArray(index) + "," + rc.readSharedArray(index + 1) + " | Tower: " + TowerTarget + " | ID: " + rc.readSharedArray(15));
+                }
+                else if(index == 7){
+                    String TowerTarget="Sage";
+                    rc.setIndicatorString("Moving towards " + rc.readSharedArray(index) + "," + rc.readSharedArray(index + 1) + " | Tower: " + TowerTarget + " | ID: " + rc.readSharedArray(16));
+                }
+                else if(index == 9){
+                    String TowerTarget="Watch Tower";
+                    rc.setIndicatorString("Moving towards " + rc.readSharedArray(index) + "," + rc.readSharedArray(index + 1) + " | Tower: " + TowerTarget + " | ID: " + rc.readSharedArray(17));
+                }
+                else if(index == 11){
+                    String TowerTarget="Laboratory";
+                    rc.setIndicatorString("Moving towards " + rc.readSharedArray(index) + "," + rc.readSharedArray(index + 1) + " | Tower: " + TowerTarget + " | ID: " + rc.readSharedArray(18));
+                }
+                return false;
+            }
+            index = index + 2;
+        }
+    }
+
+    public static void getHealsFromArchon() throws GameActionException {
+        RobotInfo[] NearTowers = rc.senseNearbyRobots(ARCHON.actionRadiusSquared, rc.getTeam());
+        boolean canGetHealed = false;
+        for (RobotInfo Tower:NearTowers) {
+            if(Tower.type == ARCHON){
+                canGetHealed = true;
+            }
+            if(canGetHealed && rc.getHealth() < rc.getType().getMaxHealth(rc.getLevel())){
+                rc.setIndicatorDot(rc.getLocation(), 255,0,255);
+                moveToLocation(new MapLocation(rc.readSharedArray(19), rc.readSharedArray(20)));
+                rc.setIndicatorLine(rc.getLocation(), new MapLocation(rc.readSharedArray(19), rc.readSharedArray(20)), 50,255,50);
+            }
+        }
+    }
+
+    public static void ArchonHeal() throws GameActionException {
+        RobotInfo[] NearTowers = rc.senseNearbyRobots(ARCHON.actionRadiusSquared, rc.getTeam());
+        for (RobotInfo Tower:NearTowers){
+            if(Tower.team == rc.getTeam() && rc.canRepair(Tower.getLocation()) && Tower.getType().getMaxHealth(rc.getLevel()) < Tower.getHealth()){
+                rc.repair(Tower.getLocation());
+                System.out.println("Im The Archon and I just healed " + Tower.getID() +" For " + Tower.type.getMaxHealth(rc.getLevel()));
+            }
+        }
     }
 
 
