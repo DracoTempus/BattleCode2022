@@ -7,6 +7,13 @@ import battlecode.common.*;
 public class Archon extends Droid {
     public static void TakeTurn() throws GameActionException {
         tryBuildAny();
+        ArchonHeal();
+        getArchonLocation();
+    }
+
+    private static void getArchonLocation() throws GameActionException {
+        rc.writeSharedArray(19, rc.getLocation().x);
+        rc.writeSharedArray(20,rc.getLocation().y);
     }
 
 
