@@ -163,8 +163,8 @@ public class BaseDroid {
             }
 
             if (rc.canAttack(enemyToAttack.location)) {
-                if (rc.canEnvision(AnomalyType.ABYSS)) {
-                    rc.envision(AnomalyType.ABYSS);
+                if (rc.canEnvision(AnomalyType.CHARGE)) {
+                    rc.envision(AnomalyType.CHARGE);
                 }
                 rc.attack(enemyToAttack.location);
             }
