@@ -95,6 +95,7 @@ public strictfp class RobotPlayer {
                         Builder.TakeTurn();
                         break;
                     case SAGE:
+                        Sage.TakeTurn();
                         break;
                 }
             } catch (GameActionException e) {

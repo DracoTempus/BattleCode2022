@@ -150,9 +150,9 @@ public class BaseDroid {
         }
     }
 
-    public static void TryAttack() throws GameActionException {
+    public static boolean TryAttack() throws GameActionException {
         RobotInfo[] enemies = rc.senseNearbyRobots(rt.actionRadiusSquared, rc.getTeam().opponent());
-
+        boolean AtTaCkEd = false;
         if (enemies.length > 0) {
             RobotInfo enemyToAttack = enemies[0];
             for (RobotInfo enemy : enemies) {
@@ -162,12 +162,7 @@ public class BaseDroid {
                 }
             }
 
-            if (rc.canAttack(enemyToAttack.location)) {
-                if (rc.canEnvision(AnomalyType.CHARGE)) {
-                    rc.envision(AnomalyType.CHARGE);
-                }
-                rc.attack(enemyToAttack.location);
-            }
+            AtTaCkEd = CanAttackTarget(enemyToAttack);
 
             if (!rc.canSenseRobot(enemyToAttack.ID)) {
                 rc.setIndicatorString("Oh, Boy here I go killing again!");
@@ -188,75 +183,126 @@ public class BaseDroid {
                 }
             }
         }
+        return AtTaCkEd;
     }
-//    public static boolean CanAttackTarget(){
-//        if (rc.canAttack()) {
-//            if (!me.isBuilding()) {
-//                if (robot.type.isBuilding()) {
-//                    tryMoveTo(robot.location);
-//                } else {
-//                    int currentRubble = rc.senseRubble(rc.getLocation());
-//
-//                    for (Direction direction : adjacentDirections) {
-//                        if (!rc.canMove(direction)) {
-//                            continue;
-//                        }
-//
-//                        MapLocation newLocation = rc.adjacentLocation(direction);
-//                        if (newLocation.distanceSquaredTo(robot.location) > me.actionRadiusSquared) {
-//                            continue;
-//                        }
-//
-//                        if (rc.senseRubble(newLocation) >= currentRubble) {
-//                            continue;
-//                        }
-//
-//                        if (tryMove(direction)) {
-//                            break;
-//                        }
-//                    }
-//                }
-//            }
-//
-//            boolean didAttack = false;
-//
-//            if (rc.canEnvision(AnomalyType.CHARGE)) {
-//                int chargeDamage = 0;
-//
-//                for (RobotInfo enemyRobot : rc.senseNearbyRobots(me.actionRadiusSquared, enemyTeam)) {
-//                    if (!enemyRobot.type.isBuilding()) {
-//                        chargeDamage += Math.min(enemyRobot.health, Math.floor((double) enemyRobot.type.getMaxHealth(enemyRobot.level) / 100.0 * 22.0));
-//                    }
-//                }
-//
-//                if (chargeDamage > me.damage) {
-//                    rc.envision(AnomalyType.CHARGE);
-//                    didAttack = true;
-//                }
-//            }
-//
-//            if (!didAttack && rc.canAttack(robot.location)) {
-//                rc.attack(robot.location);
-//                didAttack = true;
-//            }
-//
-//            if (didAttack && robot.type == RobotType.ARCHON) {
-//                RobotInfo newRobot = rc.senseRobotAtLocation(robot.location);
-//                if (newRobot == null || newRobot.team == myTeam || newRobot.type != RobotType.ARCHON) {
-//                    sharedArray.setEnemyArchonLocation(sharedArray.archonIdToIndex(robot.ID), null);
-//                }
-//            }
-//
-//            if (robot.type.canAttack() && rc.isMovementReady() && rc.getHealth() != me.getMaxHealth(rc.getLevel())) {
-//                tryMoveToSafety();
-//            }
-//
-//            return true;
-//        }
-//
-//        return false;
-//    }
-//    }
+
+    public static void RaNdOm_MoVeMeNt() throws GameActionException {
+        Direction dir = directions[rng.nextInt(directions.length)];
+        if (rc.canMove(dir)) {
+            rc.move(dir);
+            rc.setIndicatorLine(rc.getLocation(), new MapLocation(rc.getLocation().x + dir.dx, rc.getLocation().y + dir.dy), 220, 220, 100);
+        }
+    }
+
+    public static boolean LetsMove(Direction direction) throws GameActionException {
+        if (rc.canMove(direction)) {
+            rc.move(direction);
+            return true;
+        }
+
+        return false;
+    }
+
+    public static boolean CanAttackTarget(RobotInfo enemy) throws GameActionException{
+        if (rc.canAttack(enemy.location)) {
+            /*if (!rc.getType().isBuilding()) {
+                for (Direction direction : directions) {
+                    if (!rc.canMove(direction)) {
+                        continue;
+                    }
+
+                    MapLocation newLocation = rc.adjacentLocation(direction);
+                    if (newLocation.distanceSquaredTo(enemy.location) > rc.getType().actionRadiusSquared) {
+                        continue;
+                    }
+
+                    if (LetsMove(direction)) {
+                        break;
+                    }
+                }
+            }*/
+
+
+
+            boolean didAttack = false;
+
+            if (rc.canEnvision(AnomalyType.CHARGE)) {
+                int chargeDamage = 0;
+
+                for (RobotInfo enemyRobot : rc.senseNearbyRobots(rt.actionRadiusSquared, rc.getTeam().opponent())) {
+                    if (!enemyRobot.type.isBuilding()) {
+                        chargeDamage += Math.min(enemyRobot.health, Math.floor((double) enemyRobot.type.getMaxHealth(enemyRobot.level) / 100.0 * 22.0));
+                    }
+                }
+
+                if (chargeDamage > rt.damage) {
+                    rc.envision(AnomalyType.CHARGE);
+                    didAttack = true;
+                }
+            }
+
+            if (!didAttack && rc.canAttack(enemy.location)) {
+                rc.attack(enemy.location);
+                didAttack = true;
+            }
+
+
+            if (enemy.type.canAttack() && rc.isMovementReady() && rc.getHealth() != rt.getMaxHealth(rc.getLevel())) {
+                tryMoveToSafety();
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    protected static boolean tryMoveToSafety() throws GameActionException {
+        MapLocation myLocation = rc.getLocation();
+        RobotInfo[] enemyRobots = rc.senseNearbyRobots(rt.visionRadiusSquared, rc.getTeam().opponent());
+
+        Direction bestDirection = null;
+        int minRubble = rc.senseRubble(myLocation);
+
+        int maxDistance = 0;
+        for (RobotInfo robot : enemyRobots) {
+            if (robot.type.canAttack()) {
+                maxDistance += myLocation.distanceSquaredTo(robot.location);
+            }
+        }
+
+        for (Direction direction : directions) {
+            if (!rc.canMove(direction)) {
+                continue;
+            }
+
+            MapLocation newLocation = rc.adjacentLocation(direction);
+            int rubble = rc.senseRubble(newLocation);
+            if (Math.abs(rubble - minRubble) > 20) {
+                continue;
+            }
+
+            int distance = 0;
+            for (RobotInfo robot : enemyRobots) {
+                if (robot.type.canAttack()) {
+                    distance += newLocation.distanceSquaredTo(robot.location);
+                }
+            }
+
+            if ((distance > maxDistance && rubble <= minRubble) || (distance == maxDistance && rubble < minRubble)) {
+                bestDirection = direction;
+                maxDistance = distance;
+                minRubble = rubble;
+            }
+        }
+
+        if (bestDirection != null) {
+            LetsMove(bestDirection);
+            return true;
+        }
+
+        return false;
+    }
 
     protected static MapLocation[] findMinesByDistance(int distance) throws GameActionException {
         MapLocation[] tmpLeadML = rc.senseNearbyLocationsWithLead(distance);

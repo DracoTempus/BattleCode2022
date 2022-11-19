@@ -129,11 +129,7 @@ public class Soldier extends BaseDroid {
                         rc.move(dir);
                     }
                 } else {
-                    dir = directions[rng.nextInt(directions.length)];
-                    if (rc.canMove(dir)) {
-                        rc.move(dir);
-                        rc.setIndicatorLine(rc.getLocation(), new MapLocation(rc.getLocation().x + dir.dx, rc.getLocation().y + dir.dy), 220, 220, 100);
-                    }
+                    RaNdOm_MoVeMeNt();
                 }
             }
             findMinesByDistance(rt.visionRadiusSquared);

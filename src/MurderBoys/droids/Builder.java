@@ -61,8 +61,8 @@ public class Builder extends BaseDroid {
             if(rc.canBuildRobot(WATCHTOWER, MyArchon.directionTo(rc.getLocation())) && WATCHTOWERSBUILT < 2){
                 rc.buildRobot(WATCHTOWER, MyArchon.directionTo(rc.getLocation()));
                 WATCHTOWERSBUILT++;
-            }else if(rc.canBuildRobot(WATCHTOWER, MyArchon.directionTo(rc.getLocation())) && WATCHTOWERSBUILT < 2){
-                rc.buildRobot(WATCHTOWER, MyArchon.directionTo(rc.getLocation()));
+            }else if(rc.canBuildRobot(WATCHTOWER, ranDir) && WATCHTOWERSBUILT < 2){
+                rc.buildRobot(WATCHTOWER, ranDir);
                 WATCHTOWERSBUILT++;
             }
         }

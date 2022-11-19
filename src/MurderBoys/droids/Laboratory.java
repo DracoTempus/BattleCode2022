@@ -12,7 +12,7 @@ import static battlecode.common.RobotType.*;
 public class Laboratory extends BaseDroid {
 
     public static void TakeTurn() throws GameActionException {
-        if (rc.canTransmute()) {
+        if (rc.canTransmute() && rc.getTeamLeadAmount(rc.getTeam()) > 50) {
             rc.transmute();
         }
     }

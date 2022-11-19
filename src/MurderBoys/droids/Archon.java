@@ -38,10 +38,23 @@ public class Archon extends BaseDroid {
             rc.writeSharedArray(SAGES_BUILT.getIndex(), rc.readSharedArray(SAGES_BUILT.getIndex()) + 1);
         }
 
+        MapLocation[] LeadLocations = rc.senseNearbyLocationsWithLead(-1);
+        if(LeadLocations.length > 0){
+            RobotInfo[] minerCheck = rc.senseNearbyRobots(-1);
+            boolean found = false;
+            for(RobotInfo robot : minerCheck){
+                if(robot.type == MINER){
+                    found = true;
+                    break;
+                }
+            }
+            if (rc.canBuildRobot(MINER, dir) && !found) {
+                rc.buildRobot(MINER, dir);
+            }
+        }
 
         int minersBuilt = rc.readSharedArray(AMOUNT_OF_MINERS.getIndex());
         if (minersBuilt < MAX_MINERS) {
-            // Let's try to build a miner.
             if (rc.canBuildRobot(MINER, dir)) {
                 rc.writeSharedArray(AMOUNT_OF_MINERS.getIndex(), minersBuilt+1);
                 rc.buildRobot(MINER, dir);
